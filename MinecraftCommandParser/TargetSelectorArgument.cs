@@ -1,0 +1,29 @@
+namespace MinecraftCommandParser
+{
+    public enum TargetSelectorArgument
+    {
+        x,
+        y,
+        z,
+        r,
+        rm,
+        m,
+        c,
+        l,
+        lm,
+        team,
+        not_team,
+        not_any_team,
+        name,
+        not_name,
+        dx,
+        dy,
+        dz,
+        rx,
+        rxm,
+        ry,
+        rym,
+        type,
+        not_type
+    }
+}
