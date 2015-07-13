@@ -468,12 +468,14 @@ namespace MinecraftCommandParser
 
         #endregion
 
-        public Asset(string id)
+        public Asset(string id, AssetType type)
         {
             Id = id;
+            Type = type;
         }
 
         public string Id { get; private set; }
+        public AssetType Type { get; private set; }
 
         public override string ToString()
         {
@@ -482,20 +484,20 @@ namespace MinecraftCommandParser
 
         public static Parser<Asset> GetEntityParser()
         {
-            return GetAssetParser(EntityIds, false);
+            return GetAssetParser(EntityIds, AssetType.Entity);
         }
 
         public static Parser<Asset> GetBlockParser()
         {
-            return GetAssetParser(BlockIds, true);
+            return GetAssetParser(BlockIds, AssetType.Block);
         }
 
         public static Parser<Asset> GetItemParser()
         {
-            return GetAssetParser(ItemIds, true);
+            return GetAssetParser(ItemIds, AssetType.Item);
         }
 
-        private static Parser<Asset> GetAssetParser(IEnumerable<string> ids, bool allowMinecraftPrefix)
+        private static Parser<Asset> GetAssetParser(IEnumerable<string> ids, AssetType type)
         {
             Parser<Asset> parser = null;
 
@@ -504,12 +506,12 @@ namespace MinecraftCommandParser
                 var localId = id;
 
                 var p =
-                    allowMinecraftPrefix
-                        ? (from minecraft in Parse.String("minecraft:").Optional()
-                            from value in Parse.String(localId).Text()
-                            select new Asset(value))
-                        : (from value in Parse.String(localId).Text()
-                            select new Asset(value));
+                    type == AssetType.Entity
+                        ? (from value in Parse.String(localId).Text()
+                            select new Asset(value, type))
+                        : (from minecraft in Parse.String("minecraft:").Optional()
+                           from value in Parse.String(localId).Text()
+                           select new Asset(value, type));
 
                 parser = parser == null ? p : parser.Or(p);
             }

@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{32D4F5C4-CFB4-4937-B3BE-467FBCD9AD69}</ProjectGuid>
+    <ProjectGuid>{0EA7335D-30A8-4D7A-B374-7D67AC7219ED}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MinecraftCommandParser</RootNamespace>
-    <AssemblyName>MinecraftCommandParser</AssemblyName>
+    <RootNamespace>Tests</RootNamespace>
+    <AssemblyName>Tests</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -30,7 +30,11 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Sprache">
+    <Reference Include="nunit.framework">
+      <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
+    </Reference>
+    <Reference Include="Sprache, Version=2.0.0.46, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Sprache.2.0.0.46\lib\portable-net4+netcore45+win8+wp8+sl5+MonoAndroid1+MonoTouch1\Sprache.dll</HintPath>
     </Reference>
     <Reference Include="System" />
@@ -42,31 +46,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AllPlayersSelector.cs" />
-    <Compile Include="AssetType.cs" />
-    <Compile Include="CommandParsers.cs" />
-    <Compile Include="Coordinate.cs" />
-    <Compile Include="DataTag.cs" />
-    <Compile Include="DataTagItem.cs" />
-    <Compile Include="EntitySelector.cs" />
-    <Compile Include="FillCommand.cs" />
-    <Compile Include="FillCommandOldBlockHandling.cs" />
-    <Compile Include="GiveCommand.cs" />
-    <Compile Include="IFormattable.cs" />
-    <Compile Include="Asset.cs" />
-    <Compile Include="Location.cs" />
-    <Compile Include="Player.cs" />
-    <Compile Include="PlayerSelector.cs" />
+    <Compile Include="GiveCommandTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RandomPlayerSelector.cs" />
-    <Compile Include="SayCommand.cs" />
-    <Compile Include="SummonCommand.cs" />
-    <Compile Include="TargetSelector.cs" />
-    <Compile Include="TargetSelectorArgument.cs" />
-    <Compile Include="TargetSelectorVariable.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MinecraftCommandParser\MinecraftCommandParser.csproj">
+      <Project>{32d4f5c4-cfb4-4937-b3be-467fbcd9ad69}</Project>
+      <Name>MinecraftCommandParser</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

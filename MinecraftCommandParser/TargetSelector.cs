@@ -2,43 +2,119 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text;
 using Sprache;
 
 namespace MinecraftCommandParser
 {
-    public class TargetSelector
+    public abstract class TargetSelector : IFormattable
     {
+        private static readonly char[] _legalVariables = { 'p', 'r', 'a', 'e' };
+
+        private readonly char _variable;
         private readonly IReadOnlyDictionary<TargetSelectorArgument, object> _arguments;
 
-        public TargetSelector(TargetSelectorVariable variable, IDictionary<TargetSelectorArgument, object> arguments)
+        protected TargetSelector(char variable, IDictionary<TargetSelectorArgument, object> arguments)
         {
-            Variable = variable;
+            if (!_legalVariables.Contains(variable)) throw new ArgumentException("variable must be 'p', 'r', 'a', or 'e'.", "variable");
+
+            _variable = variable;
             _arguments = new ReadOnlyDictionary<TargetSelectorArgument, object>(arguments);
         }
 
-        public TargetSelectorVariable Variable { get; private set; }
+        private static TargetSelector GetTargetSelector(
+            char variable,
+            IDictionary<TargetSelectorArgument, object> arguments)
+        {
+            switch (variable)
+            {
+                case 'p':
+                    return new PlayerSelector(arguments);
+                case 'r':
+                    return new RandomPlayerSelector(arguments);
+                case 'a':
+                    return new AllPlayersSelector(arguments);
+                case 'e':
+                    return new EntitySelector(arguments);
+                default:
+                    throw new ArgumentException("variable must be 'p', 'r', 'a', or 'e'.", "variable");
+            }
+        }
+
         public IReadOnlyDictionary<TargetSelectorArgument, object> Arguments { get { return _arguments; } }
 
         internal static Parser<TargetSelector> GetParser()
         {
-            var targetSelectorVariableParser = CommandParsers.GetEnumParser<TargetSelectorVariable>();
+            return GetParser<TargetSelector>(_legalVariables);
+        }
+
+        internal static Parser<TTargetSelector> GetParser<TTargetSelector>(params char[] variables)
+            where TTargetSelector : TargetSelector
+        {
+            if (variables == null) throw new ArgumentNullException("variables");
+
+            if (variables.Length == 0)
+            {
+                variables = _legalVariables;
+            }
+            else if (variables.Any(v => !_legalVariables.Contains(v)))
+            {
+                throw new ArgumentException("variables may only contain 'p', 'r', 'a', or 'e'.", "variables");
+            }
+            else if (variables.Distinct().Count() != variables.Length)
+            {
+                throw new ArgumentException("variables may not contain duplicates.", "variables");
+            }
+
+            foreach (var variable in variables)
+            {
+                switch (variable)
+                {
+                    case 'p':
+                        if (!typeof(TTargetSelector).IsAssignableFrom(typeof(PlayerSelector)))
+                        {
+                            throw new ArgumentException(string.Format("TTargetSelector type, {0}, is not assignable to PlayerSelector type.", typeof(TTargetSelector)), "variables");
+                        }
+                        break;
+                    case 'r':
+                        if (!typeof(TTargetSelector).IsAssignableFrom(typeof(RandomPlayerSelector)))
+                        {
+                            throw new ArgumentException(string.Format("TTargetSelector type, {0}, is not assignable to RandomPlayerSelector type.", typeof(TTargetSelector)), "variables");
+                        }
+                        break;
+                    case 'a':
+                        if (!typeof(TTargetSelector).IsAssignableFrom(typeof(AllPlayersSelector)))
+                        {
+                            throw new ArgumentException(string.Format("TTargetSelector type, {0}, is not assignable to AllPlayersSelector type.", typeof(TTargetSelector)), "variables");
+                        }
+                        break;
+                    case 'e':
+                        if (!typeof(TTargetSelector).IsAssignableFrom(typeof(EntitySelector)))
+                        {
+                            throw new ArgumentException(string.Format("TTargetSelector type, {0}, is not assignable to EntitySelector type.", typeof(TTargetSelector)), "variables");
+                        }
+                        break;
+                }
+            }
+
+            var variableParser = Parse.Chars(variables);
             var argumentParser = GetArgumentParser();
 
             return
                 from w1 in Parse.WhiteSpace.Many()
                 from at in Parse.Char('@')
-                from variable in targetSelectorVariableParser
+                from variable in variableParser
                 from arguments in
                     (from openBracket in Parse.Char('[')
-                        from items in CommandParsers.OptionallyDelimitedBy(argumentParser, Parse.Char(',').Token()).Token()
-                        from closeBracket in Parse.Char(']')
-                        select items.ToDictionary(x => x.Key, x => x.Value)).Optional()
-                select new TargetSelector(variable, arguments.GetOrElse(new Dictionary<TargetSelectorArgument, object>()));
+                     from items in argumentParser.OptionallyDelimitedBy(Parse.Char(',').Token()).Token()
+                     from closeBracket in Parse.Char(']')
+                     select items.ToDictionary(x => x.Key, x => x.Value)).Optional()
+                select (TTargetSelector)GetTargetSelector(variable, arguments.GetOrElse(new Dictionary<TargetSelectorArgument, object>()));
         }
 
         private static Parser<KeyValuePair<TargetSelectorArgument, object>> GetArgumentParser()
         {
-            Parser<KeyValuePair<TargetSelectorArgument, object>> argumentParser =
+            var argumentParser =
                 from argument in Parse.Char('x')
                 from eq in Parse.Char('=').Token()
                 from value in CommandParsers.CoordinateParser
@@ -191,6 +267,41 @@ namespace MinecraftCommandParser
                 select new KeyValuePair<TargetSelectorArgument, object>(TargetSelectorArgument.type, value));
 
             return argumentParser;
+        }
+
+        public string PrettyPrinted
+        {
+            get { return GetString(", "); }
+        }
+
+        public string Minified
+        {
+            get { return GetString(","); }
+        }
+
+        private string GetString(string separator)
+        {
+            var sb = new StringBuilder();
+
+            sb.Append("@").Append(_variable);
+
+            var arguments = Arguments.ToList();
+
+            if (arguments.Any())
+            {
+                sb.Append("[");
+
+                sb.Append(arguments[0].Key).Append("=").Append(arguments[0].Value);
+
+                for (int i = 1; i < arguments.Count; i++)
+                {
+                    sb.Append(separator).Append(arguments[i].Key).Append("=").Append(arguments[i].Value);
+                }
+
+                sb.Append("]");
+            }
+
+            return sb.ToString();
         }
     }
 }

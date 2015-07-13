@@ -12,12 +12,14 @@ namespace MinecraftCommandParser
         public static readonly Parser<Asset> EntityParser;
         public static readonly Parser<Asset> BlockParser;
         public static readonly Parser<Asset> ItemParser;
+        public static readonly Parser<Player> PlayerParser;
         public static readonly Parser<DataTag> DataTagParser;
         public static readonly Parser<Coordinate> CoordinateParser;
         public static readonly Parser<Location> LocationParser;
         public static readonly Parser<TargetSelector> TargetSelectorParser;
 
         public static readonly Parser<FillCommand> FillCommandParser;
+        public static readonly Parser<GiveCommand> GiveCommandParser;
         public static readonly Parser<SayCommand> SayCommandParser;
         public static readonly Parser<SummonCommand> SummonCommandParser;
 
@@ -30,12 +32,14 @@ namespace MinecraftCommandParser
             EntityParser = Asset.GetEntityParser();
             BlockParser = Asset.GetBlockParser();
             ItemParser = Asset.GetItemParser();
+            PlayerParser = Player.GetParser();
             DataTagParser = DataTag.GetParser();
             CoordinateParser = Coordinate.GetParser();
             LocationParser = Location.GetParser();
             TargetSelectorParser = TargetSelector.GetParser();
 
             FillCommandParser = FillCommand.GetParser();
+            GiveCommandParser = GiveCommand.GetParser();
             SummonCommandParser = SummonCommand.GetParser();
             SayCommandParser = SayCommand.GetParser();
 
@@ -44,6 +48,7 @@ namespace MinecraftCommandParser
                 from slash in Parse.Char('/').Optional()
                 from command in
                     FillCommandParser.Select(c => (IFormattable)c)
+                        .Or(GiveCommandParser)
                         .Or(SummonCommandParser)
                         .Or(SayCommandParser)
                 from w2 in Parse.WhiteSpace.Many().End()
